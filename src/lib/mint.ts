@@ -205,7 +205,7 @@ export async function mintNFT(jobData: any) {
     collection: collectionAddress,
     tokenOwner: recipient,
   });
-  
+
 
   const token = await prisma.token.create({
     data: {
@@ -224,6 +224,15 @@ export async function mintNFT(jobData: any) {
         connect: { id: token.id }
       },
       status: "CLAIMED"
+    }
+  });
+
+  await prisma.qRSession.update({
+    where: { id: claim.qrSession.id },
+    data: {
+      maxClaims: {
+        decrement: 1
+      }
     }
   });
 }
