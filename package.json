@@ -1,0 +1,31 @@
+{
+  "name": "zkdrops-worker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "prisma generate && pnpm run build",
+    "dev": "concurrently \"tsc -w\" \"nodemon -q dist/index.js\"",
+    "start": "node dist/index.js",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.5.1",
+  "devDependencies": {
+    "@types/node": "^22.13.15",
+    "@types/node-fetch": "^2.6.12",
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.9",
+    "prisma": "6.5.0",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@prisma/client": "6.5.0",
+    "bullmq": "^5.46.1",
+    "dotenv": "^16.4.7",
+    "ioredis": "^5.6.0"
+  }
+}

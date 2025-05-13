@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Organizer {
+  id         String     @id @default(cuid())
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  wallet     String?    @unique
+  email      String?    @unique
+  merkleTree String?
+  campaigns  Campaign[]
+  claims     Claim[]
+}
+
+model Campaign {
+  id                String            @id @default(cuid())
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  name              String
+  description       String?
+  organizerId       String
+  organizer         Organizer         @relation(fields: [organizerId], references: [id])
+  tokenSymbol       String
+  tokenUri          String
+  isActive          Boolean           @default(true)
+  qrCodeUrl         String?
+  startsAt          DateTime?
+  endsAt            DateTime?
+  claimLimitPerUser Int?
+  metadataUri       String?
+  claims            Claim[]
+  qrSessions        QRSession[]
+  CompressedToken   CompressedToken[]
+}
+
+model Claim {
+  id                    String           @id @default(cuid())
+  createdAt             DateTime         @default(now())
+  organizerId           String?
+  organizer             Organizer?       @relation(fields: [organizerId], references: [id])
+  campaignId            String
+  campaign              Campaign         @relation(fields: [campaignId], references: [id])
+  zkProofId             String?
+  zkProof               ZKProof?         @relation(fields: [zkProofId], references: [id])
+  status                ClaimStatus      @default(PENDING)
+  claimedAt             DateTime?
+  wallet                String?
+  compressedMintAddress String?
+  compressedTokenId     String?
+  qrSessionId           String?
+  compressedToken       CompressedToken? @relation(fields: [compressedTokenId], references: [id])
+  qrSession             QRSession?       @relation(fields: [qrSessionId], references: [id])
+  deviceHash            String?
+  geoRegion             String?
+}
+
+model CompressedToken {
+  id              String   @id @default(cuid())
+  mintAddress     String   @unique
+  metadataUri     String?
+  collection      String?
+  compressedProof Json?
+  available       Boolean  @default(true)
+  campaignId      String
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  Claim           Claim[]
+}
+
+model ZKProof {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  proof         Json
+  publicSignals Json
+  valid         Boolean  @default(true)
+  Claim         Claim[]
+}
+
+model QRSession {
+  id         String          @id @default(cuid())
+  campaignId String
+  campaign   Campaign        @relation(fields: [campaignId], references: [id])
+  createdAt  DateTime        @default(now())
+  expiry     QRSessionExpiry
+  maxClaims  Int             @default(1)
+  nonce      String          @unique
+  claims     Claim[]
+  vault      Vault[]
+}
+
+enum QRSessionExpiry {
+  TWELVE_HOURS
+  ONE_DAY
+  TWO_DAY
+  NEVER
+}
+
+enum ClaimStatus {
+  PENDING
+  VERIFIED
+  CLAIMED
+  FAILED
+}
+
+model Vault {
+  id          String    @id @default(cuid())
+  costInSol   Decimal
+  qrSessionId String
+  qrSession   QRSession @relation(fields: [qrSessionId], references: [id])
+  publicKey   String
+  privateKey  String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  minted      Boolean   @default(false)
+}
